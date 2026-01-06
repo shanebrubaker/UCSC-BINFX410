@@ -1,0 +1,76 @@
+features:
+  # Imputation features
+  wbc_imputed:
+    type: continuous
+    description: "White blood cell count with missing values imputed using median strategy"
+    source_columns: [wbc_count]
+    category: lab_values
+
+  hemoglobin_imputed:
+    type: continuous
+    description: "Hemoglobin level with missing values imputed using median strategy"
+    source_columns: [hemoglobin]
+    category: lab_values
+
+  platelet_imputed:
+    type: continuous
+    description: "Platelet count with missing values imputed using median strategy"
+    source_columns: [platelet_count]
+    category: lab_values
+
+  # Encoding features
+  sex_encoded:
+    type: categorical
+    description: "One-hot encoded sex variable"
+    source_columns: [sex]
+    category: demographics
+
+  ethnicity_encoded:
+    type: categorical
+    description: "One-hot encoded ethnicity variable"
+    source_columns: [ethnicity]
+    category: demographics
+
+  # Scaling features
+  age_scaled:
+    type: continuous
+    description: "Age standardized using z-score normalization"
+    source_columns: [age]
+    category: demographics
+
+  tmb_score_scaled:
+    type: continuous
+    description: "Tumor mutational burden score standardized"
+    source_columns: [tmb_score]
+    category: genomic
+
+  # Derived features
+  mutation_burden:
+    type: continuous
+    description: "Count of key driver mutations (TP53, KRAS, EGFR)"
+    source_columns: [tp53_mutation, kras_mutation, egfr_mutation]
+    category: genomic
+
+  clinical_risk_score:
+    type: continuous
+    description: "Combined risk score based on age and comorbidity count"
+    source_columns: [age, comorbidity_count]
+    category: clinical
+
+  age_group:
+    type: categorical
+    description: "Age binned into clinically relevant groups"
+    source_columns: [age]
+    category: demographics
+
+  wbc_category:
+    type: categorical
+    description: "WBC count categorized as low/normal/high"
+    source_columns: [wbc_count]
+    category: lab_values
+
+  high_risk_patient:
+    type: binary
+    description: "Flag for patients with multiple risk factors"
+    source_columns: [age, comorbidity_count, tmb_score]
+    category: clinical

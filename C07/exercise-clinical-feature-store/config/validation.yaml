@@ -1,0 +1,112 @@
+raw_data_validation:
+  patient_id:
+    type: string
+    nullable: false
+    unique: true
+
+  age:
+    type: int
+    nullable: false
+    min_value: 0
+    max_value: 120
+
+  sex:
+    type: string
+    nullable: false
+    allowed_values: ["Male", "Female", "M", "F", "male", "female"]
+
+  ethnicity:
+    type: string
+    nullable: false
+    allowed_values: ["Caucasian", "African American", "Asian", "Hispanic", "Other"]
+
+  diagnosis:
+    type: string
+    nullable: false
+
+  comorbidity_count:
+    type: int
+    nullable: false
+    min_value: 0
+    max_value: 10
+
+  tp53_mutation:
+    type: bool
+    nullable: false
+
+  kras_mutation:
+    type: bool
+    nullable: false
+
+  egfr_mutation:
+    type: bool
+    nullable: false
+
+  tmb_score:
+    type: float
+    nullable: false
+    min_value: 0
+    max_value: 100
+
+  msi_status:
+    type: string
+    nullable: false
+    allowed_values: ["MSI-H", "MSI-L", "MSS"]
+
+  wbc_count:
+    type: float
+    nullable: true
+    min_value: 0
+    max_value: 50
+
+  hemoglobin:
+    type: float
+    nullable: true
+    min_value: 0
+    max_value: 25
+
+  platelet_count:
+    type: float
+    nullable: true
+    min_value: 0
+    max_value: 1000
+
+  treatment_response:
+    type: string
+    nullable: false
+    allowed_values: ["Complete Response", "Partial Response", "Stable Disease", "Progressive Disease"]
+
+  survival_months:
+    type: float
+    nullable: false
+    min_value: 0
+    max_value: 200
+
+  response_status:
+    type: int
+    nullable: false
+    allowed_values: [0, 1]
+
+feature_validation:
+  # Statistical checks for distributions
+  distributional_checks:
+    age_scaled:
+      mean_range: [-0.5, 0.5]
+      std_range: [0.8, 1.2]
+
+    mutation_burden:
+      min_value: 0
+      max_value: 3
+
+    clinical_risk_score:
+      min_value: 0
+      max_value: 100
+
+  # Missing data thresholds
+  missing_data_thresholds:
+    max_missing_rate: 0.20  # 20% max missing for any feature
+
+  # Correlation monitoring
+  correlation_monitoring:
+    enabled: true
+    high_correlation_threshold: 0.95
