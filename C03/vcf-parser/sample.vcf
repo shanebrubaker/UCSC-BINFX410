@@ -1,0 +1,32 @@
+##fileformat=VCFv4.2
+##fileDate=20240101
+##source=VCFParserDemo
+##reference=GRCh38
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr2,length=242193529>
+##contig=<ID=chr3,length=198295559>
+##contig=<ID=chr4,length=190214555>
+##contig=<ID=chr5,length=181538259>
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership">
+##FILTER=<ID=PASS,Description="All filters passed">
+##FILTER=<ID=LowQual,Description="Low quality">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE1	SAMPLE2	SAMPLE3
+chr1	10000	rs001	A	G	50	PASS	DP=120;AF=0.25;DB	GT:DP	0/1:40	0/0:35	0/1:45
+chr1	20000	rs002	C	T	45	PASS	DP=95;AF=0.15	GT:DP	0/0:30	0/1:32	0/0:33
+chr1	35000	rs003	G	A	35	LowQual	DP=40;AF=0.05	GT:DP	0/0:12	0/0:15	0/1:13
+chr1	50000	rs004	T	C	55	PASS	DP=150;AF=0.30	GT:DP	0/1:50	0/1:48	1/1:52
+chr2	15000	rs005	AA	A	40	PASS	DP=85;AF=0.10	GT:DP	0/1:28	0/0:27	0/0:30
+chr2	30000	rs006	G	GT	42	PASS	DP=90;AF=0.20	GT:DP	0/0:30	0/1:28	0/1:32
+chr2	45000	.	C	A	48	PASS	DP=110;AF=0.18	GT:DP	0/1:38	0/1:35	0/0:37
+chr3	10000	rs008	T	G	52	PASS	DP=130;AF=0.22	GT:DP	0/0:42	0/1:44	0/1:44
+chr3	25000	rs009	A	C	38	LowQual	DP=55;AF=0.08	GT:DP	0/0:18	0/0:17	0/1:20
+chr3	40000	rs010	GG	TT	60	PASS	DP=145;AF=0.35;DB	GT:DP	0/1:48	0/1:47	1/1:50
+chr4	5000	rs011	C	G	44	PASS	DP=100;AF=0.12	GT:DP	0/1:33	0/0:32	0/0:35
+chr4	20000	rs012	T	A	46	PASS	DP=105;AF=0.16	GT:DP	0/0:35	0/1:34	0/0:36
+chr4	35000	rs013	A	T,G	58	PASS	DP=140;AF=0.28,0.12	GT:DP	0/1:46	0/2:45	1/2:49
+chr5	12000	rs014	G	C	36	LowQual	DP=48;AF=0.06	GT:DP	0/0:16	0/0:15	0/1:17
+chr5	28000	rs015	C	T	50	PASS	DP=115;AF=0.24	GT:DP	0/1:38	0/1:36	0/0:41
