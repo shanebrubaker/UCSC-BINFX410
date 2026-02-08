@@ -1,0 +1,5 @@
+pandas
+matplotlib
+biopython
+jupyter
+notebook

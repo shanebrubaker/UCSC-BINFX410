@@ -1,0 +1,16 @@
+name: binfx410-bigdata
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.9
+  - jupyter
+  - notebook
+  - pandas
+  - matplotlib
+  - seqkit
+  - fastp
+  - pip
+  - pip:
+    - biopython
