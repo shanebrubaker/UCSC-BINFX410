@@ -1,0 +1,5 @@
+chr1	150	400	gene_X	0	+
+chr1	900	1100	gene_Y	0	+
+chr2	50	300	promoter_Z	0	-
+chr2	1200	1800	gene_W	0	+
+chr3	500	900	enhancer_V	0	-
