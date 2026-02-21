@@ -1,0 +1,5 @@
+Sample	Top overrepresented sequence	Sum of remaining overrepresented sequences
+sample_R1	0.27999999999999997	17.479999999999993
+sample_R2	0.27	17.119999999999994
+sample_trimmed_R1	0.27999999999999997	17.479999999999993
+sample_trimmed_R2	0.27	17.119999999999994

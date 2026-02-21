@@ -1,0 +1,14 @@
+Category,Metric,Value,Threshold,Status
+Read Quality,Q30 Rate,44.7%,≥80.0%,FAIL
+Read Quality,Mean Base Quality,29.6,≥30.0,FAIL
+Pre-processing,Adapter Contamination,5.0%,≤10.0%,PASS
+Pre-processing,Post-Trim Retention,100.0%,≥85.0%,PASS
+Alignment,Mean MAPQ,43.9,≥20.0,PASS
+Coverage,Mean Target Coverage,302.8x,≥100.0x,PASS
+Coverage,Bases ≥20x,65.8%,≥95.0%,FAIL
+Coverage,Bases ≥100x,60.1%,≥90.0%,FAIL
+Coverage,Coverage Uniformity (CV),95.1%,≤35.0%,FAIL
+Library Quality,PCR Duplicate Rate,80.0%,≤30.0%,FAIL
+Sample Quality,Contamination,0.00%,≤2.0%,PASS
+Batch Normalization,Batch Variance (pre-norm),2.30,≤5.0,PASS
+Batch Normalization,Variance Reduction,100.0%,≥50%,PASS

@@ -1,0 +1,5 @@
+Module	Section	Sample Name	Source
+FastQC	all_sections	sample_R1	/Users/shanebrubaker/work/BINFX410/C04/ngs-qc-analysis/fastqc_raw/sample_R1_fastqc.zip
+FastQC	all_sections	sample_R2	/Users/shanebrubaker/work/BINFX410/C04/ngs-qc-analysis/fastqc_raw/sample_R2_fastqc.zip
+FastQC	all_sections	sample_trimmed_R1	/Users/shanebrubaker/work/BINFX410/C04/ngs-qc-analysis/fastqc_trimmed/sample_trimmed_R1_fastqc.zip
+FastQC	all_sections	sample_trimmed_R2	/Users/shanebrubaker/work/BINFX410/C04/ngs-qc-analysis/fastqc_trimmed/sample_trimmed_R2_fastqc.zip
