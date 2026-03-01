@@ -1,0 +1,63 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Sequence QC Pipeline",
+    "description": "Chromosome-level sequence QC with adapter trimming and per-chromosome reporting.",
+    "type": "object",
+    "definitions": {
+        "input_output_options": {
+            "title": "Input/output options",
+            "type": "object",
+            "description": "Input files and output location.",
+            "required": ["reference", "reads"],
+            "properties": {
+                "reference": {
+                    "type": "string",
+                    "description": "Path to reference genome FASTA file.",
+                    "format": "file-path",
+                    "mimetype": "text/plain"
+                },
+                "reads": {
+                    "type": "string",
+                    "description": "Path to input FASTQ reads file.",
+                    "format": "file-path",
+                    "mimetype": "text/plain"
+                },
+                "outdir": {
+                    "type": "string",
+                    "description": "Output directory for results.",
+                    "default": "results",
+                    "format": "directory-path"
+                }
+            }
+        },
+        "qc_options": {
+            "title": "QC options",
+            "type": "object",
+            "description": "Quality control filtering thresholds.",
+            "properties": {
+                "adapter": {
+                    "type": "string",
+                    "default": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC",
+                    "description": "Illumina adapter sequence to trim from reads."
+                },
+                "min_quality": {
+                    "type": "integer",
+                    "default": 25,
+                    "description": "Minimum average Phred quality score. Reads below this are discarded.",
+                    "minimum": 0,
+                    "maximum": 40
+                },
+                "min_length": {
+                    "type": "integer",
+                    "default": 50,
+                    "description": "Minimum read length (bp) after trimming. Shorter reads are discarded.",
+                    "minimum": 1
+                }
+            }
+        }
+    },
+    "allOf": [
+        {"$ref": "#/definitions/input_output_options"},
+        {"$ref": "#/definitions/qc_options"}
+    ]
+}
