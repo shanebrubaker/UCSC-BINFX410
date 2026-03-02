@@ -1,0 +1,42 @@
+# Generated data files
+*.fasta
+*.fastq
+*.fa
+*.fq
+
+# Results directory
+results/
+test_results/
+
+# NextFlow work directory and cache
+work/
+.nextflow/
+.nextflow.log*
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
