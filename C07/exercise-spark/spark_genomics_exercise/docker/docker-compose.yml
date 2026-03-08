@@ -1,0 +1,13 @@
+services:
+  spark-jupyter:
+    build: .
+    ports:
+      - "8888:8888"
+      - "4040:4040"
+    volumes:
+      - ../data:/workspace/data
+      - ../notebooks:/workspace/notebooks
+      - ../scripts:/workspace/scripts
+    environment:
+      - SPARK_LOCAL_DIRS=/tmp/spark
+    mem_limit: 4g
