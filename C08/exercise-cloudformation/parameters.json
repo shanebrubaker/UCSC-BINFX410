@@ -1,0 +1,46 @@
+[
+  {
+    "ParameterKey": "DatabaseName",
+    "ParameterValue": "mydatabase"
+  },
+  {
+    "ParameterKey": "MasterUsername",
+    "ParameterValue": "admin"
+  },
+  {
+    "ParameterKey": "MasterUserPassword",
+    "ParameterValue": "YourSecurePassword123"
+  },
+  {
+    "ParameterKey": "MinCapacity",
+    "ParameterValue": "0.5"
+  },
+  {
+    "ParameterKey": "MaxCapacity",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "VpcCIDR",
+    "ParameterValue": "10.0.0.0/16"
+  },
+  {
+    "ParameterKey": "PrivateSubnet1CIDR",
+    "ParameterValue": "10.0.1.0/24"
+  },
+  {
+    "ParameterKey": "PrivateSubnet2CIDR",
+    "ParameterValue": "10.0.2.0/24"
+  },
+  {
+    "ParameterKey": "BackupRetentionPeriod",
+    "ParameterValue": "7"
+  },
+  {
+    "ParameterKey": "PreferredBackupWindow",
+    "ParameterValue": "03:00-04:00"
+  },
+  {
+    "ParameterKey": "PreferredMaintenanceWindow",
+    "ParameterValue": "sun:04:00-sun:05:00"
+  }
+]
