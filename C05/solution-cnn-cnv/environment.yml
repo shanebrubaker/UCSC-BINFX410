@@ -1,0 +1,16 @@
+name: cnn-cnv
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - "numpy<2"        # torch 2.0.x was compiled against NumPy 1.x; pin to avoid ABI crash
+  - scipy
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - pandas
+  - jupyter
+  - ipykernel
+  - pip
+  - pip:
+    - torch           # installs latest stable; compatible with numpy<2
