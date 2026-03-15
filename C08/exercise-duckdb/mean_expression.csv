@@ -1,0 +1,15 @@
+symbol,condition,mean_tpm
+TP53,tumor,312.75
+TP53,normal,39.61
+EGFR,tumor,11.59
+EGFR,normal,13.99
+MYC,tumor,69.46
+MYC,normal,6.37
+LINC01,tumor,32.27
+LINC01,normal,110.19
+MIR21,tumor,30.34
+MIR21,normal,18.01
+BRCA1,tumor,146.02
+BRCA1,normal,75.91
+PTEN,tumor,6.87
+PTEN,normal,23.99

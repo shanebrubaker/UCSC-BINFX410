@@ -1,0 +1,35 @@
+[
+  {
+    "pathway_id": "hsa04110",
+    "name": "Cell cycle",
+    "genes": [
+      "TP53",
+      "MYC",
+      "EGFR"
+    ]
+  },
+  {
+    "pathway_id": "hsa03440",
+    "name": "Homologous recombination",
+    "genes": [
+      "BRCA1",
+      "TP53"
+    ]
+  },
+  {
+    "pathway_id": "hsa04012",
+    "name": "ErbB signaling",
+    "genes": [
+      "EGFR",
+      "MYC"
+    ]
+  },
+  {
+    "pathway_id": "hsa04115",
+    "name": "p53 signaling",
+    "genes": [
+      "TP53",
+      "PTEN"
+    ]
+  }
+]
