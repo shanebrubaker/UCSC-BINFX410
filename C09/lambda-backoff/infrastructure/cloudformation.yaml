@@ -1,0 +1,376 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  Bioinformatics Step Functions Educational Project
+  ==================================================
+
+  This CloudFormation template deploys:
+  - Lambda function simulating unreliable API calls
+  - Step Functions state machine with exponential backoff
+  - IAM roles with least-privilege permissions
+  - CloudWatch log groups for monitoring
+
+  All resources are free-tier compatible and tagged for easy cleanup.
+
+  Estimated Monthly Cost: $0.00 (within free tier limits)
+  Region: us-east-1 (recommended for free tier)
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: bioinfo-stepfunctions-demo
+    Description: Project name used for resource naming
+    AllowedPattern: ^[a-z0-9-]+$
+    ConstraintDescription: Must contain only lowercase letters, numbers, and hyphens
+
+  Environment:
+    Type: String
+    Default: Learning
+    Description: Environment tag for resource organization
+    AllowedValues:
+      - Learning
+      - Development
+      - Testing
+
+Resources:
+  # ==========================================================================
+  # LAMBDA FUNCTION - Unreliable API Simulator
+  # ==========================================================================
+
+  UnreliableAPIFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-unreliable-api'
+      Description: Simulates unreliable bioinformatics API with 60% failure rate
+      Runtime: python3.12
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+
+      # Free Tier: 128MB is sufficient and minimizes cost
+      MemorySize: 128
+
+      # Timeout: 3 seconds is enough for simulation
+      Timeout: 3
+
+      # Lambda code embedded inline (simplified deployment)
+      Code:
+        ZipFile: |
+          import json
+          import random
+          import time
+          from datetime import datetime
+
+          def lambda_handler(event, context):
+              """Simulates unreliable API with 60% failure rate"""
+
+              attempt = event.get('attempt', 1)
+              sample_id = event.get('sample_id', 'SAMPLE_UNKNOWN')
+              execution_id = context.request_id
+              timestamp = datetime.utcnow().isoformat()
+
+              print(f"{'='*70}")
+              print(f"EXECUTION ATTEMPT #{attempt}")
+              print(f"{'='*70}")
+              print(f"Timestamp:     {timestamp}")
+              print(f"Sample ID:     {sample_id}")
+              print(f"Execution ID:  {execution_id}")
+              print(f"{'='*70}")
+
+              # Simulate processing time
+              processing_time = random.uniform(0.1, 0.5)
+              time.sleep(processing_time)
+
+              # 60% failure rate
+              if random.random() < 0.60:
+                  error_types = [
+                      "HTTP 503: Service Temporarily Unavailable",
+                      "HTTP 429: Rate Limit Exceeded",
+                      "HTTP 500: Internal Server Error",
+                      "ConnectionTimeout: Request timed out",
+                      "NetworkError: Unable to reach server"
+                  ]
+                  error_message = random.choice(error_types)
+                  print(f"❌ FAILURE: {error_message}")
+                  print(f"{'='*70}\n")
+                  raise Exception(f"{error_message} (Attempt {attempt})")
+
+              # Success case
+              result = {
+                  'status': 'success',
+                  'sample_id': sample_id,
+                  'attempt_number': attempt,
+                  'execution_id': execution_id,
+                  'timestamp': timestamp,
+                  'processing_time_seconds': round(processing_time, 3),
+                  'results': {
+                      'sequence_length': random.randint(1000, 50000),
+                      'quality_score': round(random.uniform(30, 40), 2),
+                      'gc_content': round(random.uniform(0.40, 0.60), 3),
+                      'alignment_coverage': round(random.uniform(0.85, 0.99), 3)
+                  },
+                  'metadata': {
+                      'total_attempts': attempt,
+                      'api_endpoint': 'simulated-genomics-api.example.com'
+                  }
+              }
+
+              print(f"✓ SUCCESS on attempt #{attempt}")
+              print(f"{'='*70}\n")
+              return result
+
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  # ==========================================================================
+  # IAM ROLE - Lambda Execution Role (Least Privilege)
+  # ==========================================================================
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-lambda-role'
+      Description: Minimal permissions for Lambda function execution
+
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+      # Managed policy for CloudWatch Logs (write-only)
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # CLOUDWATCH LOG GROUP - Lambda Function Logs
+  # ==========================================================================
+
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${UnreliableAPIFunction}'
+
+      # Free Tier: 5GB ingestion, 1 month retention is free
+      RetentionInDays: 7
+
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # IAM ROLE - Step Functions Execution Role
+  # ==========================================================================
+
+  StepFunctionsExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-stepfunctions-role'
+      Description: Allows Step Functions to invoke Lambda function
+
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+
+      # Inline policy with least-privilege permissions
+      Policies:
+        - PolicyName: InvokeLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Allow invoking specific Lambda function only
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt UnreliableAPIFunction.Arn
+
+              # Allow writing to CloudWatch Logs
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                Resource: '*'
+
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================================================
+  # STEP FUNCTIONS STATE MACHINE - Exponential Backoff Demo
+  # ==========================================================================
+
+  RetryStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub '${ProjectName}-retry-demo'
+      StateMachineType: STANDARD
+      RoleArn: !GetAtt StepFunctionsExecutionRole.Arn
+
+      # Substitute Lambda ARN in state machine definition
+      DefinitionString: !Sub |
+        {
+          "Comment": "Bioinformatics API Retry Pattern with Exponential Backoff",
+          "StartAt": "InvokeUnreliableAPI",
+          "States": {
+            "InvokeUnreliableAPI": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${UnreliableAPIFunction.Arn}",
+                "Payload": {
+                  "sample_id.$": "$.sample_id",
+                  "attempt.$": "$.attempt"
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException",
+                    "States.TaskFailed"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 5,
+                  "BackoffRate": 2.0
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "ResultPath": "$.error",
+                  "Next": "HandleFailure"
+                }
+              ],
+              "ResultSelector": {
+                "status.$": "$.Payload.status",
+                "sample_id.$": "$.Payload.sample_id",
+                "results.$": "$.Payload.results",
+                "metadata.$": "$.Payload.metadata"
+              },
+              "ResultPath": "$.api_response",
+              "Next": "ProcessSuccess"
+            },
+            "ProcessSuccess": {
+              "Type": "Pass",
+              "Parameters": {
+                "execution_status": "SUCCESS",
+                "message": "API call succeeded after retries",
+                "sample_id.$": "$.api_response.sample_id",
+                "results.$": "$.api_response.results",
+                "metadata.$": "$.api_response.metadata"
+              },
+              "End": true
+            },
+            "HandleFailure": {
+              "Type": "Pass",
+              "Parameters": {
+                "execution_status": "FAILED",
+                "message": "API call failed after all retry attempts",
+                "error_info.$": "$.error",
+                "sample_id.$": "$.sample_id"
+              },
+              "End": true
+            }
+          }
+        }
+
+      # CloudWatch Logs for Step Functions execution history
+      LoggingConfiguration:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StepFunctionsLogGroup.Arn
+
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  # ==========================================================================
+  # CLOUDWATCH LOG GROUP - Step Functions Execution Logs
+  # ==========================================================================
+
+  StepFunctionsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/vendedlogs/states/${ProjectName}-retry-demo'
+      RetentionInDays: 7
+
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+# ==========================================================================
+# OUTPUTS - Resource Information for Testing
+# ==========================================================================
+
+Outputs:
+  LambdaFunctionName:
+    Description: Name of the Lambda function
+    Value: !Ref UnreliableAPIFunction
+    Export:
+      Name: !Sub '${ProjectName}-lambda-name'
+
+  LambdaFunctionArn:
+    Description: ARN of the Lambda function
+    Value: !GetAtt UnreliableAPIFunction.Arn
+    Export:
+      Name: !Sub '${ProjectName}-lambda-arn'
+
+  StateMachineArn:
+    Description: ARN of the Step Functions state machine
+    Value: !Ref RetryStateMachine
+    Export:
+      Name: !Sub '${ProjectName}-statemachine-arn'
+
+  StateMachineName:
+    Description: Name of the Step Functions state machine
+    Value: !GetAtt RetryStateMachine.Name
+
+  ExecutionCommand:
+    Description: AWS CLI command to execute the state machine
+    Value: !Sub |
+      aws stepfunctions start-execution \
+        --state-machine-arn ${RetryStateMachine} \
+        --input '{"sample_id":"SAMPLE_12345_RNA_SEQ","attempt":1}'
+
+  CloudWatchLogGroup:
+    Description: CloudWatch Logs group for Step Functions
+    Value: !Ref StepFunctionsLogGroup
+
+  ConsoleURL:
+    Description: AWS Console URL for Step Functions state machine
+    Value: !Sub 'https://console.aws.amazon.com/states/home?region=${AWS::Region}#/statemachines/view/${RetryStateMachine}'

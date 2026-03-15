@@ -1,0 +1,68 @@
+{
+  "Comment": "Bioinformatics API Retry Pattern - Educational Step Functions State Machine",
+  "StartAt": "InvokeUnreliableAPI",
+  "States": {
+    "InvokeUnreliableAPI": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${LambdaFunctionArn}",
+        "Payload": {
+          "sample_id.$": "$.sample_id",
+          "attempt.$": "$.attempt"
+        }
+      },
+      "Retry": [
+        {
+          "Comment": "Exponential Backoff Retry Configuration",
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 5,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "HandleFailure"
+        }
+      ],
+      "ResultSelector": {
+        "status.$": "$.Payload.status",
+        "sample_id.$": "$.Payload.sample_id",
+        "results.$": "$.Payload.results",
+        "metadata.$": "$.Payload.metadata"
+      },
+      "ResultPath": "$.api_response",
+      "Next": "ProcessSuccess"
+    },
+    "ProcessSuccess": {
+      "Type": "Pass",
+      "Parameters": {
+        "execution_status": "SUCCESS",
+        "message": "API call succeeded after retries",
+        "sample_id.$": "$.api_response.sample_id",
+        "results.$": "$.api_response.results",
+        "metadata.$": "$.api_response.metadata"
+      },
+      "End": true
+    },
+    "HandleFailure": {
+      "Type": "Pass",
+      "Parameters": {
+        "execution_status": "FAILED",
+        "message": "API call failed after all retry attempts",
+        "error_info.$": "$.error",
+        "sample_id.$": "$.sample_id"
+      },
+      "End": true
+    }
+  }
+}

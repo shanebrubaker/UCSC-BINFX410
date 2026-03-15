@@ -1,0 +1,102 @@
+{
+  "Comment": "==================================================================\n            BIOINFORMATICS API RETRY PATTERN\n            Educational Step Functions State Machine\n==================================================================\n\nThis state machine demonstrates exponential backoff retry logic,\na critical pattern for building resilient bioinformatics pipelines.\n\nUse Cases:\n- Calling NCBI APIs with rate limits\n- Accessing cloud genomics services\n- Handling transient network failures\n- Managing third-party sequencing APIs\n\nKey Learning Objectives:\n1. Understanding exponential backoff calculations\n2. Configuring retry policies in Step Functions\n3. Error handling and state transitions\n4. CloudWatch integration for monitoring\n==================================================================",
+
+  "StartAt": "InvokeUnreliableAPI",
+
+  "States": {
+    "InvokeUnreliableAPI": {
+      "Comment": "==================================================================\n                    MAIN API INVOCATION STATE\n==================================================================\n\nThis state invokes a Lambda function that simulates an unreliable\nbioinformatics API. The function fails ~60% of the time to\ndemonstrate retry behavior.\n\nType: Task - Executes a single unit of work (Lambda function)\n==================================================================",
+
+      "Type": "Task",
+
+      "Resource": "arn:aws:states:::lambda:invoke",
+
+      "Parameters": {
+        "Comment": "Lambda function ARN will be substituted during deployment",
+        "FunctionName": "${LambdaFunctionArn}",
+
+        "Payload": {
+          "Comment": "Input parameters passed to Lambda function",
+
+          "sample_id.$": "$.sample_id",
+          "Comment_sample_id": "Bioinformatics sample identifier (e.g., SAMPLE_12345_RNA_SEQ)",
+
+          "attempt.$": "$.attempt",
+          "Comment_attempt": "Current attempt number (1-5, tracked across retries)"
+        }
+      },
+
+      "Retry": [
+        {
+          "Comment": "==================================================================\n                    EXPONENTIAL BACKOFF CONFIGURATION\n==================================================================\n\nRetry Policy Explanation:\n--------------------------\n\nErrorEquals: Which errors trigger retries\n  - Lambda.ServiceException: AWS service issues\n  - Lambda.AWSLambdaException: Lambda runtime errors\n  - Lambda.SdkClientException: SDK client errors\n  - Lambda.TooManyRequestsException: Rate limiting\n  - States.TaskFailed: Generic task failures\n\nIntervalSeconds: 2\n  - Initial wait time before first retry = 2 seconds\n\nMaxAttempts: 5\n  - Maximum number of retry attempts\n  - Total attempts = 1 original + 5 retries = 6 total\n\nBackoffRate: 2.0\n  - Multiplier for exponential backoff\n  - Each retry waits 2x longer than previous\n\nRetry Timeline Calculation:\n  Attempt 1: Immediate (original attempt)\n  Attempt 2: Wait 2 seconds   (IntervalSeconds × BackoffRate^0)\n  Attempt 3: Wait 4 seconds   (IntervalSeconds × BackoffRate^1)\n  Attempt 4: Wait 8 seconds   (IntervalSeconds × BackoffRate^2)\n  Attempt 5: Wait 16 seconds  (IntervalSeconds × BackoffRate^3)\n  Attempt 6: Wait 32 seconds  (IntervalSeconds × BackoffRate^4)\n  \n  Total maximum wait time: 62 seconds\n  Total maximum execution time: ~70 seconds (including Lambda runtime)\n\nWhy Exponential Backoff?\n------------------------\n1. Prevents overwhelming the failing service\n2. Gives transient issues time to resolve\n3. Reduces thundering herd problems\n4. Complies with API rate limiting best practices\n\nBioinformatics Context:\n-----------------------\nMany genomics APIs (NCBI, EBI, UCSC) have rate limits:\n- NCBI E-utilities: 3 requests/second (no API key)\n- NCBI E-utilities: 10 requests/second (with API key)\n- Exponential backoff helps stay within these limits\n==================================================================",
+
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed"
+          ],
+
+          "IntervalSeconds": 2,
+          "MaxAttempts": 5,
+          "BackoffRate": 2.0
+        }
+      ],
+
+      "Catch": [
+        {
+          "Comment": "==================================================================\n                    ERROR HANDLING CONFIGURATION\n==================================================================\n\nCatch Block: Handles errors after all retries are exhausted\n\nErrorEquals: ['States.ALL']\n  - Catches any error type not successfully retried\n  - Acts as a fallback error handler\n\nResultPath: '$.error'\n  - Stores error information in the 'error' field\n  - Preserves original input data\n  - Allows downstream states to access error details\n\nNext: 'HandleFailure'\n  - Transitions to failure handling state\n  - Logs failure information\n  - Returns structured error response\n==================================================================",
+
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "HandleFailure"
+        }
+      ],
+
+      "ResultSelector": {
+        "Comment": "Extract relevant fields from Lambda response",
+        "status.$": "$.Payload.status",
+        "sample_id.$": "$.Payload.sample_id",
+        "results.$": "$.Payload.results",
+        "metadata.$": "$.Payload.metadata"
+      },
+
+      "ResultPath": "$.api_response",
+      "Comment_ResultPath": "Store Lambda output in 'api_response' field, preserving original input",
+
+      "Next": "ProcessSuccess"
+    },
+
+    "ProcessSuccess": {
+      "Comment": "==================================================================\n                    SUCCESS STATE\n==================================================================\n\nThis state processes successful API responses.\n\nType: Pass - Transforms data without executing external resources\n\nIn production workflows, this might:\n- Store results in S3\n- Update DynamoDB tables\n- Trigger downstream analysis\n- Send SNS notifications\n==================================================================",
+
+      "Type": "Pass",
+
+      "Parameters": {
+        "execution_status": "SUCCESS",
+        "message": "API call succeeded after retries",
+        "sample_id.$": "$.api_response.sample_id",
+        "results.$": "$.api_response.results",
+        "metadata.$": "$.api_response.metadata"
+      },
+
+      "End": true
+    },
+
+    "HandleFailure": {
+      "Comment": "==================================================================\n                    FAILURE STATE\n==================================================================\n\nThis state handles failures after all retry attempts are exhausted.\n\nIn production workflows, this might:\n- Log errors to CloudWatch\n- Send alerts via SNS/email\n- Store failed samples for manual review\n- Trigger dead letter queue processing\n==================================================================",
+
+      "Type": "Pass",
+
+      "Parameters": {
+        "execution_status": "FAILED",
+        "message": "API call failed after all retry attempts",
+        "error_info.$": "$.error",
+        "sample_id.$": "$.sample_id"
+      },
+
+      "End": true
+    }
+  }
+}

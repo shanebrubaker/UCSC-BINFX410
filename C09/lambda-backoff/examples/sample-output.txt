@@ -1,0 +1,465 @@
+================================================================================
+SAMPLE OUTPUT: AWS Step Functions Exponential Backoff Demo
+================================================================================
+
+This file shows expected output from executing the state machine.
+The actual timing and number of attempts will vary due to the 60% random
+failure rate in the Lambda function.
+
+================================================================================
+DEPLOYMENT OUTPUT
+================================================================================
+
+$ ./scripts/deploy.sh
+
+========================================
+Pre-Deployment Checks
+========================================
+
+✓ AWS CLI is installed
+✓ AWS credentials are configured
+ℹ AWS Account ID: 123456789012
+ℹ Region: us-east-1
+✓ CloudFormation template found
+ℹ Validating CloudFormation template...
+✓ Template validation passed
+
+========================================
+Deploying Stack: bioinfo-stepfunctions-demo
+========================================
+
+ℹ Creating new stack...
+ℹ Deploying CloudFormation stack (this may take 2-3 minutes)...
+ℹ Waiting for stack operation to complete...
+✓ Stack deployment completed successfully!
+
+========================================
+Deployment Information
+========================================
+
+✓ Lambda Function: bioinfo-stepfunctions-demo-unreliable-api
+✓ State Machine ARN: arn:aws:states:us-east-1:123456789012:stateMachine:bioinfo-stepfunctions-demo-retry-demo
+
+========================================
+Testing Deployment
+========================================
+
+ℹ Starting test execution of state machine...
+✓ Execution started: arn:aws:states:us-east-1:123456789012:execution:bioinfo-stepfunctions-demo-retry-demo:exec-123
+ℹ Waiting 5 seconds for execution to process...
+ℹ Execution Status: RUNNING
+
+========================================
+Deployment Complete!
+========================================
+
+✓ All resources deployed successfully!
+
+Next Steps:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. View Step Functions Console:
+   https://console.aws.amazon.com/states/home?region=us-east-1#/statemachines/...
+
+2. Execute the state machine:
+   aws stepfunctions start-execution \
+     --state-machine-arn arn:aws:states:us-east-1:123456789012:stateMachine:bioinfo-stepfunctions-demo-retry-demo \
+     --input '{"sample_id":"SAMPLE_12345_RNA_SEQ","attempt":1}'
+
+3. View CloudWatch Logs:
+   aws logs tail /aws/lambda/bioinfo-stepfunctions-demo-unreliable-api --follow
+
+4. Test with script:
+   ./scripts/execute.sh
+
+5. Read the tutorial:
+   cat TUTORIAL.md
+
+Cleanup:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+When finished learning, remove all resources:
+   ./scripts/cleanup.sh bioinfo-stepfunctions-demo
+
+Cost Information:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+All resources are within AWS Free Tier limits:
+- Lambda: 1M free requests/month
+- Step Functions: 4,000 free state transitions/month
+- CloudWatch Logs: 5GB free ingestion/month
+
+Estimated cost: $0.00 for typical educational usage
+
+✓ Setup complete! Happy learning! 🧬
+
+
+================================================================================
+EXECUTION OUTPUT (Example with 4 retry attempts before success)
+================================================================================
+
+$ ./scripts/execute.sh
+
+========================================
+Executing Step Functions State Machine
+========================================
+
+ℹ Retrieving state machine ARN from stack: bioinfo-stepfunctions-demo
+✓ State Machine ARN: arn:aws:states:us-east-1:123456789012:stateMachine:bioinfo-stepfunctions-demo-retry-demo
+
+========================================
+Starting Execution
+========================================
+
+ℹ Sample ID: SAMPLE_1736083200_RNA_SEQ
+ℹ Starting execution...
+✓ Execution started!
+Execution ARN: arn:aws:states:us-east-1:123456789012:execution:bioinfo-stepfunctions-demo-retry-demo:execution-1736083200
+
+========================================
+Monitoring Execution
+========================================
+
+ℹ Polling execution status (this may take up to 60 seconds)...
+
+[10:30:00] Status: RUNNING (waiting...)
+[10:30:03] Status: RUNNING (waiting...)
+[10:30:06] Status: RUNNING (waiting...)
+[10:30:09] Status: RUNNING (waiting...)
+[10:30:12] Status: RUNNING (waiting...)
+[10:30:15] Status: RUNNING (waiting...)
+[10:30:18] Status: RUNNING (waiting...)
+[10:30:21] Status: SUCCEEDED
+
+========================================
+Execution Results
+========================================
+
+ℹ Status: SUCCEEDED
+ℹ Started: 2026-01-05T10:30:00.123Z
+ℹ Stopped: 2026-01-05T10:30:21.456Z
+✓ Execution completed successfully!
+
+Output:
+{
+  "execution_status": "SUCCESS",
+  "message": "API call succeeded after retries",
+  "sample_id": "SAMPLE_1736083200_RNA_SEQ",
+  "results": {
+    "sequence_length": 23456,
+    "quality_score": 36.72,
+    "gc_content": 0.523,
+    "alignment_coverage": 0.943
+  },
+  "metadata": {
+    "total_attempts": 5,
+    "api_endpoint": "simulated-genomics-api.example.com",
+    "region": "us-east-1"
+  }
+}
+
+========================================
+Execution History (Retry Attempts)
+========================================
+
+ℹ Fetching execution history to show retry attempts...
+
+[2026-01-05T10:30:00.123Z] Attempting Lambda invocation...
+[2026-01-05T10:30:00.567Z] Attempt failed: States.TaskFailed
+
+[2026-01-05T10:30:02.567Z] Attempting Lambda invocation...  ← +2s (exponential backoff)
+[2026-01-05T10:30:03.012Z] Attempt failed: States.TaskFailed
+
+[2026-01-05T10:30:07.012Z] Attempting Lambda invocation...  ← +4s (exponential backoff)
+[2026-01-05T10:30:07.456Z] Attempt failed: States.TaskFailed
+
+[2026-01-05T10:30:15.456Z] Attempting Lambda invocation...  ← +8s (exponential backoff)
+[2026-01-05T10:30:15.901Z] Attempt failed: States.TaskFailed
+
+[2026-01-05T10:30:31.901Z] Attempting Lambda invocation...  ← +16s (exponential backoff)
+[2026-01-05T10:30:32.345Z] Attempt succeeded!
+
+========================================
+CloudWatch Logs
+========================================
+
+ℹ Recent Lambda logs (last 10 minutes):
+
+2026-01-05T10:30:00.200Z START RequestId: abc-123-def-456 Version: $LATEST
+
+2026-01-05T10:30:00.250Z ======================================================================
+2026-01-05T10:30:00.250Z EXECUTION ATTEMPT #1
+2026-01-05T10:30:00.250Z ======================================================================
+2026-01-05T10:30:00.251Z Timestamp:     2026-01-05T10:30:00.250Z
+2026-01-05T10:30:00.251Z Sample ID:     SAMPLE_1736083200_RNA_SEQ
+2026-01-05T10:30:00.251Z Execution ID:  abc-123-def-456
+2026-01-05T10:30:00.251Z Request ID:    abc-123-def-456
+2026-01-05T10:30:00.251Z ======================================================================
+2026-01-05T10:30:00.252Z Simulating API processing: 0.234 seconds...
+2026-01-05T10:30:00.486Z Failure check: 0.723 vs threshold 0.600
+2026-01-05T10:30:00.487Z ❌ FAILURE SIMULATED
+2026-01-05T10:30:00.487Z Error Type: HTTP 503: Service Temporarily Unavailable
+2026-01-05T10:30:00.487Z Attempt 1 failed - Step Functions will retry with exponential backoff
+2026-01-05T10:30:00.487Z ======================================================================
+
+2026-01-05T10:30:00.500Z END RequestId: abc-123-def-456
+2026-01-05T10:30:00.500Z REPORT RequestId: abc-123-def-456
+                          Duration: 287.45 ms  Billed Duration: 288 ms
+                          Memory Size: 128 MB  Max Memory Used: 42 MB
+
+---
+
+2026-01-05T10:30:02.600Z START RequestId: ghi-789-jkl-012 Version: $LATEST
+
+2026-01-05T10:30:02.650Z ======================================================================
+2026-01-05T10:30:02.650Z EXECUTION ATTEMPT #2
+2026-01-05T10:30:02.650Z ======================================================================
+2026-01-05T10:30:02.651Z Timestamp:     2026-01-05T10:30:02.650Z
+2026-01-05T10:30:02.651Z Sample ID:     SAMPLE_1736083200_RNA_SEQ
+2026-01-05T10:30:02.651Z Execution ID:  ghi-789-jkl-012
+2026-01-05T10:30:02.651Z ======================================================================
+2026-01-05T10:30:02.652Z Simulating API processing: 0.156 seconds...
+2026-01-05T10:30:02.808Z Failure check: 0.812 vs threshold 0.600
+2026-01-05T10:30:02.809Z ❌ FAILURE SIMULATED
+2026-01-05T10:30:02.809Z Error Type: HTTP 429: Rate Limit Exceeded
+2026-01-05T10:30:02.809Z Attempt 2 failed - Step Functions will retry with exponential backoff
+2026-01-05T10:30:02.809Z ======================================================================
+
+2026-01-05T10:30:02.820Z END RequestId: ghi-789-jkl-012
+2026-01-05T10:30:02.820Z REPORT RequestId: ghi-789-jkl-012
+                          Duration: 210.34 ms  Billed Duration: 211 ms
+                          Memory Size: 128 MB  Max Memory Used: 43 MB
+
+---
+
+2026-01-05T10:30:07.050Z START RequestId: mno-345-pqr-678 Version: $LATEST
+
+2026-01-05T10:30:07.100Z ======================================================================
+2026-01-05T10:30:07.100Z EXECUTION ATTEMPT #3
+2026-01-05T10:30:07.100Z ======================================================================
+2026-01-05T10:30:07.101Z Timestamp:     2026-01-05T10:30:07.100Z
+2026-01-05T10:30:07.101Z Sample ID:     SAMPLE_1736083200_RNA_SEQ
+2026-01-05T10:30:07.101Z Execution ID:  mno-345-pqr-678
+2026-01-05T10:30:07.101Z ======================================================================
+2026-01-05T10:30:07.102Z Simulating API processing: 0.321 seconds...
+2026-01-05T10:30:07.423Z Failure check: 0.678 vs threshold 0.600
+2026-01-05T10:30:07.424Z ❌ FAILURE SIMULATED
+2026-01-05T10:30:07.424Z Error Type: HTTP 500: Internal Server Error
+2026-01-05T10:30:07.424Z Attempt 3 failed - Step Functions will retry with exponential backoff
+2026-01-05T10:30:07.424Z ======================================================================
+
+2026-01-05T10:30:07.435Z END RequestId: mno-345-pqr-678
+2026-01-05T10:30:07.435Z REPORT RequestId: mno-345-pqr-678
+                          Duration: 335.67 ms  Billed Duration: 336 ms
+                          Memory Size: 128 MB  Max Memory Used: 41 MB
+
+---
+
+2026-01-05T10:30:15.490Z START RequestId: stu-901-vwx-234 Version: $LATEST
+
+2026-01-05T10:30:15.540Z ======================================================================
+2026-01-05T10:30:15.540Z EXECUTION ATTEMPT #4
+2026-01-05T10:30:15.540Z ======================================================================
+2026-01-05T10:30:15.541Z Timestamp:     2026-01-05T10:30:15.540Z
+2026-01-05T10:30:15.541Z Sample ID:     SAMPLE_1736083200_RNA_SEQ
+2026-01-05T10:30:15.541Z Execution ID:  stu-901-vwx-234
+2026-01-05T10:30:15.541Z ======================================================================
+2026-01-05T10:30:15.542Z Simulating API processing: 0.289 seconds...
+2026-01-05T10:30:15.831Z Failure check: 0.745 vs threshold 0.600
+2026-01-05T10:30:15.832Z ❌ FAILURE SIMULATED
+2026-01-05T10:30:15.832Z Error Type: ConnectionTimeout: Request timed out
+2026-01-05T10:30:15.832Z Attempt 4 failed - Step Functions will retry with exponential backoff
+2026-01-05T10:30:15.832Z ======================================================================
+
+2026-01-05T10:30:15.843Z END RequestId: stu-901-vwx-234
+2026-01-05T10:30:15.843Z REPORT RequestId: stu-901-vwx-234
+                          Duration: 303.12 ms  Billed Duration: 304 ms
+                          Memory Size: 128 MB  Max Memory Used: 44 MB
+
+---
+
+2026-01-05T10:30:31.940Z START RequestId: yza-567-bcd-890 Version: $LATEST
+
+2026-01-05T10:30:31.990Z ======================================================================
+2026-01-05T10:30:31.990Z EXECUTION ATTEMPT #5
+2026-01-05T10:30:31.990Z ======================================================================
+2026-01-05T10:30:31.991Z Timestamp:     2026-01-05T10:30:31.990Z
+2026-01-05T10:30:31.991Z Sample ID:     SAMPLE_1736083200_RNA_SEQ
+2026-01-05T10:30:31.991Z Execution ID:  yza-567-bcd-890
+2026-01-05T10:30:31.991Z ======================================================================
+2026-01-05T10:30:31.992Z Simulating API processing: 0.412 seconds...
+2026-01-05T10:30:32.404Z Failure check: 0.234 vs threshold 0.600
+2026-01-05T10:30:32.405Z ✓ SUCCESS
+2026-01-05T10:30:32.405Z API call completed successfully on attempt #5
+2026-01-05T10:30:32.406Z Results: {
+2026-01-05T10:30:32.406Z   "sequence_length": 23456,
+2026-01-05T10:30:32.406Z   "quality_score": 36.72,
+2026-01-05T10:30:32.406Z   "gc_content": 0.523,
+2026-01-05T10:30:32.406Z   "alignment_coverage": 0.943
+2026-01-05T10:30:32.406Z }
+2026-01-05T10:30:32.407Z ======================================================================
+
+2026-01-05T10:30:32.420Z END RequestId: yza-567-bcd-890
+2026-01-05T10:30:32.420Z REPORT RequestId: yza-567-bcd-890
+                          Duration: 430.25 ms  Billed Duration: 431 ms
+                          Memory Size: 128 MB  Max Memory Used: 45 MB
+
+========================================
+Summary
+========================================
+
+View Details:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Step Functions Console:
+   https://console.aws.amazon.com/states/home?region=us-east-1#/executions/details/arn:...
+
+2. View all CloudWatch logs:
+   aws logs tail /aws/lambda/bioinfo-stepfunctions-demo-unreliable-api --follow
+
+3. Run another execution:
+   ./scripts/execute.sh bioinfo-stepfunctions-demo SAMPLE_NEW_001
+
+Learning Points:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Notice the time intervals between retry attempts (exponential backoff)
+  Attempt 1 → 2: +2 seconds
+  Attempt 2 → 3: +4 seconds
+  Attempt 3 → 4: +8 seconds
+  Attempt 4 → 5: +16 seconds
+
+- Observe how failures are automatically retried up to 5 times
+- Check CloudWatch logs to see detailed attempt information
+- Read TUTORIAL.md for more about retry patterns in bioinformatics
+
+✓ Execution monitoring complete!
+
+
+================================================================================
+CLEANUP OUTPUT
+================================================================================
+
+$ ./scripts/cleanup.sh
+
+========================================
+AWS Resources Cleanup
+========================================
+
+⚠ This will DELETE the following resources:
+
+  • CloudFormation Stack: bioinfo-stepfunctions-demo
+  • Lambda Function
+  • Step Functions State Machine
+  • IAM Roles (Lambda and Step Functions)
+  • CloudWatch Log Groups
+  • All execution history and logs
+
+⚠ This action CANNOT be undone!
+
+Are you sure you want to continue? (yes/no): yes
+
+========================================
+Checking Resources
+========================================
+
+✓ Found stack: bioinfo-stepfunctions-demo
+ℹ Retrieving resource information...
+ℹ Lambda Function: bioinfo-stepfunctions-demo-unreliable-api
+ℹ State Machine: bioinfo-stepfunctions-demo-retry-demo
+
+========================================
+Deleting CloudFormation Stack
+========================================
+
+ℹ Initiating stack deletion (this may take 2-3 minutes)...
+✓ Stack deletion initiated
+ℹ Waiting for stack deletion to complete...
+✓ Stack deleted successfully
+
+========================================
+Verifying Deletion
+========================================
+
+✓ Lambda function deleted
+✓ State machine deleted
+ℹ Checking IAM roles...
+✓ IAM roles deleted
+
+========================================
+CloudWatch Logs Cleanup
+========================================
+
+ℹ Searching for related CloudWatch log groups...
+
+⚠ Found CloudWatch log groups:
+  • /aws/lambda/bioinfo-stepfunctions-demo-unreliable-api
+  • /aws/vendedlogs/states/bioinfo-stepfunctions-demo-retry-demo
+
+Delete these log groups? (yes/no): yes
+ℹ Deleting log group: /aws/lambda/bioinfo-stepfunctions-demo-unreliable-api
+ℹ Deleting log group: /aws/vendedlogs/states/bioinfo-stepfunctions-demo-retry-demo
+✓ Log groups deleted
+
+========================================
+Cleanup Summary
+========================================
+
+✓ CloudFormation stack deleted
+ℹ All managed resources have been removed
+
+✓ Cleanup Complete!
+
+Verification Commands:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Verify stack deletion:
+   aws cloudformation describe-stacks --stack-name bioinfo-stepfunctions-demo --region us-east-1
+   (Should return: Stack with id bioinfo-stepfunctions-demo does not exist)
+
+2. List remaining Lambda functions:
+   aws lambda list-functions --region us-east-1 --query 'Functions[*].FunctionName'
+
+3. List remaining Step Functions:
+   aws stepfunctions list-state-machines --region us-east-1 --query 'stateMachines[*].name'
+
+4. Check IAM roles:
+   aws iam list-roles --query 'Roles[?contains(RoleName, `bioinfo-stepfunctions-demo`)].RoleName'
+
+Cost Impact:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+All resources that could incur charges have been deleted.
+
+Next Steps:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+• Review TUTORIAL.md to reinforce learning concepts
+• Practice deploying again: ./scripts/deploy.sh
+• Experiment with different retry configurations
+• Apply these patterns to your bioinformatics workflows!
+
+✓ Thank you for learning with AWS Step Functions! 🧬
+
+
+================================================================================
+NOTES
+================================================================================
+
+1. Retry attempts vary: Due to the 60% failure rate, you might see anywhere
+   from 1 to 6 attempts before success. Run multiple executions to observe
+   different patterns.
+
+2. Timing precision: CloudWatch timestamps are accurate to milliseconds.
+   You can verify exponential backoff by comparing timestamps in logs.
+
+3. Success probability: With 60% failure rate and 6 total attempts:
+   - Probability of eventual success: 1 - (0.6^6) = 99.9936%
+   - Average attempts to success: ~2.5 attempts
+
+4. Cost tracking: All operations shown above are within free tier limits.
+   Typical usage: ~$0.00
+
+5. Learning value: Run the execution script multiple times to see different
+   retry patterns and failure scenarios. Each execution teaches different
+   aspects of retry logic.
+
+================================================================================
