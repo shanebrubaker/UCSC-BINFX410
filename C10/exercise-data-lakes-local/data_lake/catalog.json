@@ -1,0 +1,25 @@
+{
+  "tables": [
+    {
+      "name": "samples",
+      "zone": "silver",
+      "path": "./data_lake/silver/samples.parquet",
+      "owner": "bioinformatics_team",
+      "description": "Cleaned sequencing sample manifest. Source: LIMS system.",
+      "last_updated": "2026-03-28T18:19:07.679207",
+      "schema": [
+        "sample_id",
+        "patient_id",
+        "tissue_type",
+        "sequencing_platform",
+        "library_prep",
+        "collection_date",
+        "mean_coverage",
+        "pct_bases_20x",
+        "project_id"
+      ],
+      "row_count": 500,
+      "sla": "refreshed after each sequencing run"
+    }
+  ]
+}
