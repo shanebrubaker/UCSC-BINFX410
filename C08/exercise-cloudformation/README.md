@@ -1,5 +1,13 @@
 # Aurora Serverless v2 CloudFormation Template
 
+> **WARNING: This exercise is for learning purposes only.**
+>
+> The CloudFormation template and deployment commands in this exercise are **real** and will create **actual AWS resources** if executed. Running them against a live AWS account **will incur real costs** — Aurora Serverless v2 starts at roughly $43/month for the minimum configuration, plus storage and I/O charges.
+>
+> **Do not run the deployment commands** unless you fully understand the costs involved, have explicit permission to use the AWS account, and intend to delete the stack immediately after. The `deploy.sh` script has been modified for this exercise so that the actual AWS commands are commented out and replaced with explanations of what each step would do.
+>
+> If you do deploy, always clean up with `aws cloudformation delete-stack` when finished to avoid unexpected charges.
+
 This CloudFormation template deploys a complete Aurora Serverless v2 PostgreSQL database with all necessary networking infrastructure.
 
 ## Architecture Overview
@@ -178,6 +186,8 @@ Outputs make important values available after stack creation.
 
 ## Deployment Instructions
 
+> **Cost & Resource Warning:** The commands below are shown for educational purposes. Executing them will create real AWS resources and incur real charges. Do not run these commands unless you intend to deploy to a live account and accept the associated costs.
+
 ### Prerequisites
 
 - AWS CLI installed and configured
@@ -188,13 +198,22 @@ Outputs make important values available after stack creation.
 
 #### Option 1: Using AWS CLI
 
+The following command would submit the template to CloudFormation and begin provisioning all resources (VPC, subnets, security group, Aurora cluster, Secrets Manager secret). **Do not run this in the exercise unless intended.**
+
 ```bash
-aws cloudformation create-stack \
-  --stack-name aurora-serverless-stack \
-  --template-body file://aurora-serverless.yaml \
-  --parameters file://parameters.json \
-  --capabilities CAPABILITY_IAM
+# EDUCATIONAL EXAMPLE — do not run without intending to create real AWS resources
+# aws cloudformation create-stack \
+#   --stack-name aurora-serverless-stack \
+#   --template-body file://aurora-serverless.yaml \
+#   --parameters file://parameters.json \
+#   --capabilities CAPABILITY_IAM
 ```
+
+What this does:
+- `create-stack` submits the template to CloudFormation
+- `--parameters file://parameters.json` injects values like database name, password, and capacity limits
+- `--capabilities CAPABILITY_IAM` acknowledges that the stack may create IAM resources
+- CloudFormation then provisions all resources defined in `aurora-serverless.yaml` in dependency order
 
 #### Option 2: Using AWS Console
 
@@ -206,18 +225,24 @@ aws cloudformation create-stack \
 
 ### Monitor Deployment
 
+This command would poll the stack status. It is read-only and safe to run against an existing stack, but there is no stack to query in this exercise.
+
 ```bash
-aws cloudformation describe-stacks \
-  --stack-name aurora-serverless-stack \
-  --query 'Stacks[0].StackStatus'
+# EDUCATIONAL EXAMPLE — only useful once a stack has been created
+# aws cloudformation describe-stacks \
+#   --stack-name aurora-serverless-stack \
+#   --query 'Stacks[0].StackStatus'
 ```
 
 ### Get Connection Information
 
+This would retrieve the Outputs section of a deployed stack, including the cluster endpoint, port, and Secrets Manager ARN.
+
 ```bash
-aws cloudformation describe-stacks \
-  --stack-name aurora-serverless-stack \
-  --query 'Stacks[0].Outputs'
+# EDUCATIONAL EXAMPLE — only useful once a stack has been created
+# aws cloudformation describe-stacks \
+#   --stack-name aurora-serverless-stack \
+#   --query 'Stacks[0].Outputs'
 ```
 
 ## Connecting to the Database
@@ -314,13 +339,14 @@ Aurora Serverless v2 automatically scales:
 
 ## Updating the Stack
 
-To modify the stack:
+To modify a deployed stack, you would run:
 
 ```bash
-aws cloudformation update-stack \
-  --stack-name aurora-serverless-stack \
-  --template-body file://aurora-serverless.yaml \
-  --parameters file://parameters.json
+# EDUCATIONAL EXAMPLE — modifies a live stack and may cause downtime for certain changes
+# aws cloudformation update-stack \
+#   --stack-name aurora-serverless-stack \
+#   --template-body file://aurora-serverless.yaml \
+#   --parameters file://parameters.json
 ```
 
 Some changes may cause replacement (downtime):
@@ -330,11 +356,14 @@ Some changes may cause replacement (downtime):
 
 ## Deleting the Stack
 
+If you deployed a stack and want to stop incurring charges, delete it with:
+
 ```bash
-aws cloudformation delete-stack --stack-name aurora-serverless-stack
+# EDUCATIONAL EXAMPLE — deletes all resources in the stack (charges stop after deletion completes)
+# aws cloudformation delete-stack --stack-name aurora-serverless-stack
 ```
 
-A final snapshot will be created automatically (due to `DeletionPolicy: Snapshot`).
+A final snapshot will be created automatically (due to `DeletionPolicy: Snapshot`). Note that snapshot storage is also billed, so delete snapshots you no longer need.
 
 ## Troubleshooting
 

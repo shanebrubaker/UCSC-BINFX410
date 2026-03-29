@@ -2,6 +2,25 @@
 
 # Aurora Serverless v2 CloudFormation Deployment Script
 # This script helps you deploy, update, and manage your Aurora Serverless stack
+#
+# ============================================================
+# EDUCATIONAL EXERCISE WARNING
+# ============================================================
+# This script contains REAL AWS CLI commands that would create
+# actual AWS resources and incur real charges if executed.
+#
+# For this exercise, the commands that create, update, or delete
+# AWS resources have been COMMENTED OUT and replaced with
+# explanations of what each command would do.
+#
+# Do not uncomment and run these commands unless you:
+#   1. Intend to deploy to a live AWS account
+#   2. Understand and accept the associated costs
+#   3. Have permission to use the AWS account
+#
+# Estimated cost of a deployed stack: $43–$100+/month
+# Always delete the stack when done to stop charges.
+# ============================================================
 
 set -e  # Exit on error
 
@@ -45,8 +64,13 @@ check_aws_cli() {
 }
 
 # Function to validate template
+# validate_template sends the template to the CloudFormation API and checks
+# for syntax errors and invalid resource configurations. This is a read-only
+# call — it does NOT create any resources or incur charges.
 validate_template() {
     print_info "Validating CloudFormation template..."
+
+    # This command is safe to run — it only checks syntax, no resources are created.
     if aws cloudformation validate-template \
         --template-body file://${TEMPLATE_FILE} \
         --region ${REGION} > /dev/null 2>&1; then
@@ -58,6 +82,7 @@ validate_template() {
 }
 
 # Function to check if stack exists
+# describe-stacks is a read-only call — safe to run, no charges.
 stack_exists() {
     aws cloudformation describe-stacks \
         --stack-name ${STACK_NAME} \
@@ -65,48 +90,96 @@ stack_exists() {
 }
 
 # Function to create stack
+# EDUCATIONAL NOTE: This function would submit the template to CloudFormation
+# and provision the following real AWS resources:
+#   - 1 VPC with 2 private subnets across different Availability Zones
+#   - 1 Internet Gateway and route table
+#   - 1 Security Group for database access control
+#   - 1 RDS DB Subnet Group
+#   - 1 Aurora Serverless v2 PostgreSQL cluster (billed per ACU-hour)
+#   - 1 Aurora DB Instance (db.serverless class)
+#   - 1 Secrets Manager secret (billed per secret per month)
+#
+# The `wait stack-create-complete` call blocks until all resources are ready,
+# which typically takes 5–15 minutes for an Aurora cluster.
 create_stack() {
     print_info "Creating stack: ${STACK_NAME}"
 
-    aws cloudformation create-stack \
-        --stack-name ${STACK_NAME} \
-        --template-body file://${TEMPLATE_FILE} \
-        --parameters file://${PARAMETERS_FILE} \
-        --region ${REGION} \
-        --tags Key=Environment,Value=Development Key=ManagedBy,Value=CloudFormation
+    print_warning "============================================================"
+    print_warning "EXERCISE MODE: The create-stack command is commented out."
+    print_warning "If this were a live deployment, the following would happen:"
+    print_warning "  1. CloudFormation receives the template and parameters"
+    print_warning "  2. Resources are created in dependency order (VPC first,"
+    print_warning "     then subnets, security groups, then Aurora cluster)"
+    print_warning "  3. The script waits 5-15 minutes for the cluster to start"
+    print_warning "  4. Stack outputs (endpoint, port, secret ARN) are displayed"
+    print_warning "  Cost: ~\$43-\$100+/month depending on usage"
+    print_warning "============================================================"
 
-    print_info "Stack creation initiated. Waiting for completion..."
-
-    aws cloudformation wait stack-create-complete \
-        --stack-name ${STACK_NAME} \
-        --region ${REGION}
-
-    print_success "Stack created successfully!"
+    # COMMENTED OUT — would create real AWS resources and incur charges:
+    #
+    # aws cloudformation create-stack \
+    #     --stack-name ${STACK_NAME} \
+    #     --template-body file://${TEMPLATE_FILE} \
+    #     --parameters file://${PARAMETERS_FILE} \
+    #     --region ${REGION} \
+    #     --tags Key=Environment,Value=Development Key=ManagedBy,Value=CloudFormation
+    #
+    # print_info "Stack creation initiated. Waiting for completion..."
+    #
+    # # This blocks until the stack reaches CREATE_COMPLETE or CREATE_FAILED status
+    # aws cloudformation wait stack-create-complete \
+    #     --stack-name ${STACK_NAME} \
+    #     --region ${REGION}
+    #
+    # print_success "Stack created successfully!"
 }
 
 # Function to update stack
+# EDUCATIONAL NOTE: update-stack submits a change set and applies it to an
+# existing stack. CloudFormation computes a diff between the current template
+# and the new one and only modifies resources that changed.
+# Some changes (e.g., engine version, encryption settings) cause a resource
+# replacement, which means the old resource is deleted and a new one is created.
+# This can cause downtime for database resources.
 update_stack() {
     print_info "Updating stack: ${STACK_NAME}"
 
-    if aws cloudformation update-stack \
-        --stack-name ${STACK_NAME} \
-        --template-body file://${TEMPLATE_FILE} \
-        --parameters file://${PARAMETERS_FILE} \
-        --region ${REGION} 2>&1 | grep -q "No updates are to be performed"; then
-        print_warning "No updates are to be performed"
-        return 0
-    fi
+    print_warning "============================================================"
+    print_warning "EXERCISE MODE: The update-stack command is commented out."
+    print_warning "If this were a live deployment, the following would happen:"
+    print_warning "  1. CloudFormation diffs the current vs. new template"
+    print_warning "  2. Only changed resources are modified or replaced"
+    print_warning "  3. The script waits for UPDATE_COMPLETE status"
+    print_warning "  Note: Some changes require resource replacement (downtime)"
+    print_warning "============================================================"
 
-    print_info "Stack update initiated. Waiting for completion..."
-
-    aws cloudformation wait stack-update-complete \
-        --stack-name ${STACK_NAME} \
-        --region ${REGION}
-
-    print_success "Stack updated successfully!"
+    # COMMENTED OUT — would modify real AWS resources:
+    #
+    # if aws cloudformation update-stack \
+    #     --stack-name ${STACK_NAME} \
+    #     --template-body file://${TEMPLATE_FILE} \
+    #     --parameters file://${PARAMETERS_FILE} \
+    #     --region ${REGION} 2>&1 | grep -q "No updates are to be performed"; then
+    #     print_warning "No updates are to be performed"
+    #     return 0
+    # fi
+    #
+    # print_info "Stack update initiated. Waiting for completion..."
+    #
+    # aws cloudformation wait stack-update-complete \
+    #     --stack-name ${STACK_NAME} \
+    #     --region ${REGION}
+    #
+    # print_success "Stack updated successfully!"
 }
 
 # Function to delete stack
+# EDUCATIONAL NOTE: delete-stack removes all resources in the stack in reverse
+# dependency order. Because the Aurora cluster has DeletionPolicy: Snapshot,
+# CloudFormation first creates a final DB snapshot before deleting the cluster.
+# Snapshot storage continues to be billed after deletion — delete snapshots
+# you no longer need from the RDS console to fully stop charges.
 delete_stack() {
     print_warning "Are you sure you want to delete stack ${STACK_NAME}? (yes/no)"
     read -r response
@@ -118,24 +191,37 @@ delete_stack() {
 
     print_info "Deleting stack: ${STACK_NAME}"
 
-    aws cloudformation delete-stack \
-        --stack-name ${STACK_NAME} \
-        --region ${REGION}
+    print_warning "============================================================"
+    print_warning "EXERCISE MODE: The delete-stack command is commented out."
+    print_warning "If this were a live deployment, the following would happen:"
+    print_warning "  1. CloudFormation creates a final Aurora snapshot (billed)"
+    print_warning "  2. All stack resources are deleted in reverse order"
+    print_warning "  3. Hourly Aurora charges stop once the cluster is deleted"
+    print_warning "  4. Remember to delete the final snapshot to stop storage charges"
+    print_warning "============================================================"
 
-    print_info "Stack deletion initiated. Waiting for completion..."
-
-    aws cloudformation wait stack-delete-complete \
-        --stack-name ${STACK_NAME} \
-        --region ${REGION}
-
-    print_success "Stack deleted successfully!"
+    # COMMENTED OUT — would delete real AWS resources:
+    #
+    # aws cloudformation delete-stack \
+    #     --stack-name ${STACK_NAME} \
+    #     --region ${REGION}
+    #
+    # print_info "Stack deletion initiated. Waiting for completion..."
+    #
+    # aws cloudformation wait stack-delete-complete \
+    #     --stack-name ${STACK_NAME} \
+    #     --region ${REGION}
+    #
+    # print_success "Stack deleted successfully!"
 }
 
 # Function to get stack outputs
+# This is a read-only call — safe to run against an existing stack.
 get_outputs() {
     print_info "Stack outputs for ${STACK_NAME}:"
     echo ""
 
+    # Read-only — no resources created, no charges
     aws cloudformation describe-stacks \
         --stack-name ${STACK_NAME} \
         --region ${REGION} \
@@ -144,9 +230,11 @@ get_outputs() {
 }
 
 # Function to get stack status
+# This is a read-only call — safe to run against an existing stack.
 get_status() {
     print_info "Stack status for ${STACK_NAME}:"
 
+    # Read-only — no resources created, no charges
     STATUS=$(aws cloudformation describe-stacks \
         --stack-name ${STACK_NAME} \
         --region ${REGION} \
@@ -168,10 +256,12 @@ get_status() {
 }
 
 # Function to get connection info
+# This is a read-only call — safe to run against an existing stack.
 get_connection_info() {
     print_info "Database connection information:"
     echo ""
 
+    # Read-only — no resources created, no charges
     OUTPUTS=$(aws cloudformation describe-stacks \
         --stack-name ${STACK_NAME} \
         --region ${REGION} \
@@ -194,16 +284,19 @@ usage() {
     cat << EOF
 Aurora Serverless v2 CloudFormation Deployment Script
 
+EDUCATIONAL EXERCISE: Actual deployment commands are commented out.
+See the WARNING at the top of this script for details.
+
 Usage: $0 [COMMAND] [OPTIONS]
 
 Commands:
-    create      Create a new stack
-    update      Update an existing stack
-    delete      Delete the stack
-    status      Show stack status and recent events
-    outputs     Show stack outputs
-    connect     Show database connection information
-    validate    Validate the CloudFormation template
+    create      [COMMENTED OUT] Would create a new stack (real AWS resources + charges)
+    update      [COMMENTED OUT] Would update an existing stack
+    delete      [COMMENTED OUT] Would delete the stack
+    status      Show stack status and recent events (read-only, safe)
+    outputs     Show stack outputs (read-only, safe)
+    connect     Show database connection information (read-only, safe)
+    validate    Validate the CloudFormation template (read-only, safe)
     help        Show this help message
 
 Options:
@@ -216,23 +309,23 @@ Environment Variables:
     AWS_REGION              Override default region
 
 Examples:
-    # Create a new stack
-    $0 create
+    # Validate the template (safe — no resources created)
+    $0 validate
 
-    # Update an existing stack
-    $0 update
+    # [EXERCISE ONLY — commented out] Create a new stack
+    # $0 create
 
-    # Get stack outputs
+    # [EXERCISE ONLY — commented out] Update an existing stack
+    # $0 update
+
+    # Get stack outputs (safe — read-only)
     $0 outputs
 
-    # Create stack with custom name
-    $0 create --stack-name my-aurora-stack
-
-    # Check stack status
+    # Check stack status (safe — read-only)
     $0 status
 
-    # Delete stack
-    $0 delete
+    # [EXERCISE ONLY — commented out] Delete stack
+    # $0 delete
 
 EOF
 }
@@ -276,8 +369,6 @@ main() {
                 exit 1
             fi
             create_stack
-            echo ""
-            get_outputs
             ;;
         update)
             validate_template
@@ -286,8 +377,6 @@ main() {
                 exit 1
             fi
             update_stack
-            echo ""
-            get_outputs
             ;;
         delete)
             if ! stack_exists; then
